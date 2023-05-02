@@ -44,6 +44,8 @@ class ApiClient {
   static String apiAddFaceId =
       "/api/method/sowaan_hr.sowaan_hr.api.user.add_face_id";
 
+  static String apiUploadImage = "/api/method/upload_file";
+
   static String? cookies;
 
   Future<Dio> apiClientInstance(context, baseURL) async {

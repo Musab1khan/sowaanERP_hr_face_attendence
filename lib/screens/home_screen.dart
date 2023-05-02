@@ -1,6 +1,7 @@
 // ignore_for_file: unused_local_variable, unnecessary_new, avoid_types_as_parameter_names, non_constant_identifier_names
 
 import 'dart:async';
+import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -65,9 +66,9 @@ class _HomeScreenState extends State<HomeScreen> {
   bool isLoadingCheckin = true;
   bool isLoadingAttendanceSummary = true;
   bool isLoadingMonthlyHours = true;
-
+  File? faceImage;
   var logType = "IN";
-
+  String checkInLogName = "";
   String baseURL = '';
 
   @override
@@ -148,7 +149,7 @@ class _HomeScreenState extends State<HomeScreen> {
         });
         Future data = APIFunction.post(context, _utils,
             ApiClient.apiGetEmployeeTodayCheckIn, formData, '');
-        data.then((value) {
+        data.then((value) async {
           setState(() {
             isLoadingCheckin = false;
           });
@@ -156,11 +157,13 @@ class _HomeScreenState extends State<HomeScreen> {
             final v = value.data["message"]["data"];
             if (v != null) {
               todayCheckins = [];
+              await v.forEach((i) {
+                todayCheckins.add(TodayCheckinModel.fromJson(i));
+              });
               setState(() {
-                v.forEach((i) {
-                  todayCheckins.add(TodayCheckinModel.fromJson(i));
-                });
-
+                if (todayCheckins.length > 0) {
+                  checkInLogName = todayCheckins.first.name!;
+                }
                 showCheckInOut = value.data["message"]["ShowCheckInOut"];
               });
               // _prefs.saveObject(_prefs.prefTodayCheckIn, todayCheckins);
@@ -284,6 +287,14 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   checkNetworkTime() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => MyFaceRecog(),
+      ),
+    );
+    faceImage = await result["attchFaceImage"];
+    print('${faceImage!.path}, Response Resized image file path:');
     // if (Platform.isAndroid) {
     //   bool timeAuto = await DatetimeSetting.timeIsAuto();
     //   bool timezoneAuto = await DatetimeSetting.timeZoneIsAuto();
@@ -365,12 +376,30 @@ class _HomeScreenState extends State<HomeScreen> {
 
       Future data = APIFunction.post(
           context, _utils, ApiClient.apiCreateEmployeeCheckIn, formData, '');
-      data.then((value) {
+      data.then((value) async {
         if (value != null && value.statusCode == 200) {
           final v = value.data["message"];
           _utils.hideProgressDialog(context);
+          print('${v["message"]}, checkin Resized image file path:');
           if (v['success'] == true) {
-            getTodayCheckIn();
+            await getTodayCheckIn();
+            List<MultipartFile> _files = [];
+            _files.add(MultipartFile.fromFileSync(
+              faceImage!.path,
+              filename: faceImage!.path.split('/').last,
+            ));
+            var formData = FormData.fromMap({
+              'file': _files.first,
+              'is_private': 1,
+              'folder': 'Home/Attachments',
+              'doctype': 'Employee Checkin',
+              'docname': checkInLogName
+            });
+            print('$checkInLogName , checkInLogName Resized image file path:');
+            Future data = APIFunction.post(
+                context, _utils, ApiClient.apiUploadImage, formData, '');
+            var res = await data;
+            print('${res}, upload image res Resized image file path:');
             dialogAlert(context, _utils, v['message'],
                 icon: Icon(
                   Icons.check_circle_outline,
@@ -1040,13 +1069,15 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                     GestureDetector(
-                      onTap: () {
-                        Navigator.push(
+                      onTap: () async {
+                        final result = await Navigator.push(
                           context,
                           MaterialPageRoute(
                             builder: (context) => MyFaceRecog(),
                           ),
                         );
+                        print(
+                            '${result["attchFaceImage"]}, Response Resized image file path:');
                       },
                       child: BoxCard(
                         name: 'Face Scanner',

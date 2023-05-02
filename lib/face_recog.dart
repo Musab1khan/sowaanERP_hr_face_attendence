@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
+import 'dart:ui' as ui; // import the dart:ui library
 import 'package:dio/dio.dart';
 import 'package:google_ml_kit/google_ml_kit.dart';
 import 'package:path_provider/path_provider.dart';
@@ -150,31 +151,37 @@ class MyFaceRecogState extends State<MyFaceRecog> {
               croppedImage = imglib.copyResizeCropSquare(croppedImage, 112);
               // int startTime = new DateTime.now().millisecondsSinceEpoch;
               var responseObj = await _recog(croppedImage);
-
-              // print('${responseObj["image"]}, Response data Checking');
-              // Encode the resulting image to the PNG image format.
-              // final png = imglib.encodePng(responseObj["image"]);
-              // // Write the PNG formatted data to a file.
-              // recognitionImage = await File('image.png').writeAsBytes(png);
               res = responseObj["name"];
-              resizedImage = imglib.copyResize(responseObj["image"],
-                  width: 200, height: 200);
-              // Convert resized image to byte array
-              Uint8List bytes =
-                  Uint8List.fromList(imglib.encodeJpg(resizedImage));
 
-              // Write byte array to file
-              File resizedImageFile = File('assets/man.png');
+              // if (res != "NOT RECOGNIZED" && res != "NO FACE SAVED") {
+              // resizedImage = imglib.copyResize(responseObj["image"],
+              //     width: 200, height: 200);
+              // }
+                resizedImage = imglib.copyResize(responseObj["image"],
+                    width: 200, height: 200);
 
-              await resizedImageFile.writeAsBytes(bytes);
-
-              // Get path of resized image file
-              String resizedImagePath = resizedImageFile.path;
-              print('Resized image file path: $resizedImagePath');
               // int endTime = new DateTime.now().millisecondsSinceEpoch;
               // print("Inference took ${endTime - startTime}ms");
               // print('$res, Response data Checking');
               finalResult.add(res, _face);
+              if (res != "NOT RECOGNIZED" && res != "NO FACE SAVED") {
+                if (resizedImage != null) {
+                  final Uint8List byteData = resizedImage.getBytes();
+                  final Uint8List pngBytes = byteData.buffer.asUint8List();
+                  final Directory appDir =
+                      await getApplicationDocumentsDirectory();
+                  final String imagePath = '${appDir.path}/image.png';
+                  final File imageFile = File(imagePath);
+                  await imageFile.writeAsBytes(pngBytes);
+                  print('${imageFile.path}, Resized image file path:');
+                  await _camera!.stopImageStream();
+                  await _camera!.dispose();
+                  setState(() {
+                    _camera = null;
+                  });
+                  Navigator.of(context).pop({'attchFaceImage': imageFile});
+                }
+              }
               // if (res != "NOT RECOGNIZED" && res != "NO FACE SAVED") {
               //   await _camera!.stopImageStream();
               //   await _camera!.dispose();
@@ -229,9 +236,18 @@ class MyFaceRecogState extends State<MyFaceRecog> {
   }
 
   Widget _buildImage() {
-    // if (e1 != null) {
-    //   print('${resizedImageFile!.path}, Encode Image Checking');
-    // }
+    Future<void> resizeImage() async {
+      // Convert the Image to a File object
+      // final ui.Image img = resizedImage;
+
+      final Uint8List byteData = resizedImage.getBytes();
+      final Uint8List pngBytes = byteData.buffer.asUint8List();
+      final Directory appDir = await getApplicationDocumentsDirectory();
+      final String imagePath = '${appDir.path}/image.png';
+      final File imageFile = File(imagePath);
+      await imageFile.writeAsBytes(pngBytes);
+      print('${imageFile.path}, Resized image file path:');
+    }
 
     if (_camera == null || !_camera!.value.isInitialized) {
       return Center(
@@ -263,7 +279,16 @@ class MyFaceRecogState extends State<MyFaceRecog> {
                   Uint8List.fromList(imglib.encodeJpg(resizedImage)),
                 ),
               )
-            : Container()
+            : Container(),
+        TextButton(
+            onPressed: () {
+              if (e1 != null) {
+                //   print('${resizedImageFile!.path}, Encode Image Checking');
+                // Convert resized image to byte array
+                resizeImage();
+              }
+            },
+            child: Text("Get Image"))
       ],
     );
   }
