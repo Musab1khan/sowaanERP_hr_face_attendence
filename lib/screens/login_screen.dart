@@ -1,14 +1,12 @@
-import 'dart:io';
+// ignore_for_file: must_be_immutable, unused_local_variable
 
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:sowaanerp_hr/common/common_dialog.dart';
 import 'package:sowaanerp_hr/models/employee.dart';
 import 'package:sowaanerp_hr/models/payroll_date.dart';
 import 'package:sowaanerp_hr/networking/api_helpers.dart';
 import 'package:sowaanerp_hr/networking/dio_client.dart';
-import 'package:sowaanerp_hr/responsive/responsive_flutter.dart';
 import 'package:sowaanerp_hr/utils/app_colors.dart';
 import 'package:sowaanerp_hr/utils/image_path.dart';
 import 'package:sowaanerp_hr/utils/shared_pref.dart';
@@ -19,9 +17,10 @@ import 'package:sowaanerp_hr/widgets/primary_button.dart';
 import 'package:sowaanerp_hr/widgets/textfield_circular.dart';
 
 import '../theme.dart';
-import 'home_screen.dart';
 
 class LoginScreen extends StatefulWidget {
+  bool? isLoggedIn;
+  LoginScreen({Key? key, this.isLoggedIn}) : super(key: key);
   @override
   _LoginScreenState createState() => _LoginScreenState();
 }
@@ -30,8 +29,8 @@ class _LoginScreenState extends State<LoginScreen> {
   bool passwordVisible = false;
   bool isRemember = false;
 
-  Utils _utils = new Utils();
-  SharedPref _pref = SharedPref();
+  final Utils _utils = Utils();
+  final SharedPref _pref = SharedPref();
 
   final TextEditingController _urlController =
       TextEditingController(text: "https://demo.sowaan.com");
@@ -45,12 +44,22 @@ class _LoginScreenState extends State<LoginScreen> {
       if (value != "") {
         setState(() {
           isRemember = true;
+          _emailController.text = value;
         });
       }
-      _emailController.text = value;
     });
     _pref.readString(_pref.prefPassword).then((value) {
-      _passwordController.text = value;
+      if (value != "") {
+        setState(() {
+          _passwordController.text = value;
+        });
+        if (widget.isLoggedIn == true &&
+            _urlController.text != "" &&
+            _emailController.text != "" &&
+            _passwordController.text != "") {
+          handleLogin();
+        }
+      }
     });
     _pref.readString(_pref.prefBaseUrl).then((value) {
       if (value == "") {
@@ -225,12 +234,18 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: Column(
                   children: [
                     TextFieldCircular(
-                        controller: _urlController, hintText: 'SowaanERP Url'),
+                      controller: _urlController,
+                      hintText: 'SowaanERP Url',
+                      color: AppColors.textWhiteGrey,
+                    ),
                     const SizedBox(
                       height: 32,
                     ),
                     TextFieldCircular(
-                        controller: _emailController, hintText: 'Username'),
+                      controller: _emailController,
+                      hintText: 'Username',
+                      color: AppColors.textWhiteGrey,
+                    ),
                     const SizedBox(
                       height: 32,
                     ),
@@ -300,6 +315,5 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
       ),
     );
-    ;
   }
 }

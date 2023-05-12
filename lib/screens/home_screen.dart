@@ -306,8 +306,9 @@ class _HomeScreenState extends State<HomeScreen> {
     //     return;
     //   }
     // }
-
-    checkGpsLocation();
+    if (faceImage != null) {
+      checkGpsLocation();
+    }
   }
 
   checkGpsLocation() async {
@@ -383,23 +384,26 @@ class _HomeScreenState extends State<HomeScreen> {
           print('${v["message"]}, checkin Resized image file path:');
           if (v['success'] == true) {
             await getTodayCheckIn();
-            List<MultipartFile> _files = [];
-            _files.add(MultipartFile.fromFileSync(
-              faceImage!.path,
-              filename: faceImage!.path.split('/').last,
-            ));
-            var formData = FormData.fromMap({
-              'file': _files.first,
-              'is_private': 1,
-              'folder': 'Home/Attachments',
-              'doctype': 'Employee Checkin',
-              'docname': checkInLogName
+            Timer(new Duration(seconds: 4), () async {
+              List<MultipartFile> _files = [];
+              _files.add(MultipartFile.fromFileSync(
+                faceImage!.path,
+                filename: faceImage!.path.split('/').last,
+              ));
+              var formData = FormData.fromMap({
+                'file': _files.first,
+                'is_private': 1,
+                'folder': 'Home/Attachments',
+                'doctype': 'Employee Checkin',
+                'docname': checkInLogName
+              });
+              print(
+                  '$checkInLogName , checkInLogName Resized image file path:');
+              Future data = APIFunction.post(
+                  context, _utils, ApiClient.apiUploadImage, formData, '');
+              var res = await data;
+              print('${res}, upload image res Resized image file path:');
             });
-            print('$checkInLogName , checkInLogName Resized image file path:');
-            Future data = APIFunction.post(
-                context, _utils, ApiClient.apiUploadImage, formData, '');
-            var res = await data;
-            print('${res}, upload image res Resized image file path:');
             dialogAlert(context, _utils, v['message'],
                 icon: Icon(
                   Icons.check_circle_outline,
@@ -537,18 +541,21 @@ class _HomeScreenState extends State<HomeScreen> {
                               width: ResponsiveFlutter.of(context).scale(52),
                               height: ResponsiveFlutter.of(context)
                                   .verticalScale(52),
-                              child: Container(),
-                              // child: Hero(
-                              //   tag: 'imageHero',
-                              //   child: widgetCommonProfile(
-                              //     imagePath: _employeeModel.image != null &&
-                              //             _employeeModel.image!
-                              //                 .startsWith("https://")
-                              //         ? _employeeModel.image.toString()
-                              //         : '$baseURL${_employeeModel.image}',
-                              //     isBackGroundColorGray: false,
-                              //   ),
+                              // child: Container(
+
                               // ),
+
+                              child: Hero(
+                                tag: 'imageHero',
+                                child: widgetCommonProfile(
+                                  imagePath: _employeeModel.image != null &&
+                                          _employeeModel.image!
+                                              .startsWith("https://")
+                                      ? _employeeModel.image.toString()
+                                      : '$baseURL${_employeeModel.image}',
+                                  isBackGroundColorGray: false,
+                                ),
+                              ),
                             ),
                           ),
                         ),
@@ -1068,26 +1075,26 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ),
                     ),
-                    GestureDetector(
-                      onTap: () async {
-                        final result = await Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => MyFaceRecog(),
-                          ),
-                        );
-                        print(
-                            '${result["attchFaceImage"]}, Response Resized image file path:');
-                      },
-                      child: BoxCard(
-                        name: 'Face Scanner',
-                        icon: Icon(
-                          Icons.settings_overscan_sharp,
-                          size: MediaQuery.of(context).size.width / 6,
-                          color: const Color(0xFF563174),
-                        ),
-                      ),
-                    ),
+                    // GestureDetector(
+                    //   onTap: () async {
+                    //     final result = await Navigator.push(
+                    //       context,
+                    //       MaterialPageRoute(
+                    //         builder: (context) => MyFaceRecog(),
+                    //       ),
+                    //     );
+                    //     print(
+                    //         '${result["attchFaceImage"]}, Response Resized image file path Saad:');
+                    //   },
+                    //   child: BoxCard(
+                    //     name: 'Face Scanner',
+                    //     icon: Icon(
+                    //       Icons.settings_overscan_sharp,
+                    //       size: MediaQuery.of(context).size.width / 6,
+                    //       color: const Color(0xFF563174),
+                    //     ),
+                    //   ),
+                    // ),
                     // GestureDetector(
                     //   onTap: () {
                     //     Navigator.push(

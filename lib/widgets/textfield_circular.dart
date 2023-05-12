@@ -5,29 +5,37 @@ import 'package:sowaanerp_hr/utils/app_colors.dart';
 class TextFieldCircular extends StatefulWidget {
   final controller;
   final String hintText;
+  Color color;
   int maxLines;
   bool enabled;
   TextFieldCircular(
-      {this.controller,
+      {Key? key,
+      this.controller,
       required this.hintText,
+      required this.color,
       this.maxLines = 1,
-      this.enabled = true});
+      this.enabled = true})
+      : super(key: key);
 
   @override
   _TextFieldCircularState createState() => _TextFieldCircularState();
 }
 
 class _TextFieldCircularState extends State<TextFieldCircular> {
+
+
   @override
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.textWhiteGrey,
+        color: widget.color,
         borderRadius: BorderRadius.circular(10.0),
       ),
       child: TextFormField(
         onSaved: (value) {
-          widget.controller.text = value;
+          setState(() {
+            widget.controller.text = value;
+          });
         },
         enabled: widget.enabled,
         maxLines: widget.maxLines,

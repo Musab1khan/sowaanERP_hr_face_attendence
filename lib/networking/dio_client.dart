@@ -43,8 +43,11 @@ class ApiClient {
       "/api/method/sowaan_hr.sowaan_hr.api.employee.get_employee_list";
   static String apiAddFaceId =
       "/api/method/sowaan_hr.sowaan_hr.api.user.add_face_id";
-
+      
+  // user
   static String apiUploadImage = "/api/method/upload_file";
+  static String apiUpdateUserImage =
+      "/api/method/sowaan_hr.sowaan_hr.api.user.update_user_image";
 
   static String? cookies;
 

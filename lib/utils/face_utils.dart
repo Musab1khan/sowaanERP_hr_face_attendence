@@ -11,6 +11,7 @@ import 'package:flutter/services.dart';
 // import 'package:firebase_ml_vision/firebase_ml_vision.dart';
 import 'package:google_ml_kit/google_ml_kit.dart';
 import 'package:image/image.dart' as imglib;
+import 'package:path_provider/path_provider.dart';
 
 typedef HandleDetection = Future<dynamic> Function(InputImage image);
 
@@ -80,6 +81,29 @@ Future<ui.Image> bytesToImage(List<dynamic> bytes) async {
   return completer.future;
 }
 
+Future<File> writeBytesToFile(Uint8List bytes, String? fileName) async {
+  final directory = await getTemporaryDirectory();
+  final filePath = '${directory.path}/${fileName ?? getRandomFileName()}';
+  final file = File(filePath);
+  await file.writeAsBytes(bytes);
+  print('File saved to $filePath');
+  return file;
+}
+
+String getRandomFileName() {
+  final random = Random.secure();
+  final now = DateTime.now().toIso8601String().replaceAll(RegExp(r'[^\d]'), '');
+  final randomString = List.generate(6, (_) => random.nextInt(9)).join('');
+  return '$now-$randomString';
+}
+
+Future<File> uint32ListToFile(Uint32List data, String path) async {
+  final bytes = data.buffer.asUint8List();
+  final file = File(path);
+  await file.writeAsBytes(bytes);
+  return file;
+}
+
 Uint8List convertFloat32ListToUint8List(Float32List float32List) {
   var bytes = <int>[];
   for (var i = 0; i < float32List.length; i++) {
@@ -88,9 +112,11 @@ Uint8List convertFloat32ListToUint8List(Float32List float32List) {
   return Uint8List.fromList(bytes);
 }
 
-Future<Image> convertFloat32ListToImage(Float32List float32List, int width, int height) async {
+Future<Image> convertFloat32ListToImage(
+    Float32List float32List, int width, int height) async {
   var byteData = convertFloat32ListToUint8List(float32List).buffer.asByteData();
-  var codec = await ui.instantiateImageCodec(byteData as Uint8List, targetWidth: width, targetHeight: height);
+  var codec = await ui.instantiateImageCodec(byteData as Uint8List,
+      targetWidth: width, targetHeight: height);
   var frameInfo = await codec.getNextFrame();
   return frameInfo.image;
 }
